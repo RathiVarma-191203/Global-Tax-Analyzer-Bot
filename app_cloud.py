@@ -151,7 +151,7 @@ else:
         # File Upload for RAG
         st.markdown("### 📁 Context Hub (Cloud Persistent)")
         with st.expander("Upload Tax Docs", expanded=True):
-            country = st.selectbox("Country Context", ["Global", "India", "USA", "UK"])
+            country = st.selectbox("Country Context", ["Global", "India", "USA", "UK", "Australia"])
             uploaded_file = st.file_uploader("PDF/Excel/DOCX", type=["pdf", "xlsx", "xls", "docx", "csv"])
             if uploaded_file and st.button("🚀 Index to pgvector"):
                 with st.spinner(f"Processing and Embedding {uploaded_file.name}..."):
