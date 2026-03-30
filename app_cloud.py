@@ -11,7 +11,8 @@ from dotenv import load_dotenv
 # Import our custom modules (ensure they are in the path)
 from app.db.supabase_client import (
     supabase, create_chat, get_chats, get_messages, 
-    save_message, delete_chat, upload_file_to_storage, save_document_metadata
+    save_message, delete_chat, update_chat_title,
+    upload_file_to_storage, save_document_metadata
 )
 from app.utils.document_processor import process_document
 from app.rag.vector_store_supabase import add_documents_to_supabase, search_supabase_index
@@ -151,7 +152,7 @@ else:
         # File Upload for RAG
         st.markdown("### 📁 Context Hub (Cloud Persistent)")
         with st.expander("Upload Tax Docs", expanded=True):
-            country = st.selectbox("Country Context", ["Global", "India", "USA", "UK", "Australia"])
+            country = st.selectbox("Country Context", ["Global", "Australia", "India", "USA", "UK"])
             uploaded_file = st.file_uploader("PDF/Excel/DOCX", type=["pdf", "xlsx", "xls", "docx", "csv"])
             if uploaded_file and st.button("🚀 Index to pgvector"):
                 with st.spinner(f"Processing and Embedding {uploaded_file.name}..."):
@@ -192,12 +193,20 @@ else:
             # Save message to DB
             save_message(st.session_state["current_chat_id"], "user", prompt)
             
+            # Auto-name the chat on the first user message
+            if len(st.session_state["messages"]) == 1:
+                auto_title = prompt[:45] + "..." if len(prompt) > 45 else prompt
+                try:
+                    update_chat_title(st.session_state["current_chat_id"], auto_title)
+                except Exception:
+                    pass
+
             with st.chat_message("assistant"):
                 placeholder = st.empty()
                 with st.spinner("Searching cloud context and datasets..."):
                     # Search pgvector index
                     retrieved_docs = search_supabase_index(st.session_state["user_id"], prompt, top_k=5)
-                    # Generate with Mistral
+                    # Generate with LLM
                     full_response = generate_response(prompt, retrieved_docs)
                     
                     # Typing Animation
