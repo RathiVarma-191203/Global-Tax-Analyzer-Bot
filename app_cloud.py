@@ -35,12 +35,8 @@ st.markdown("""
         background-color: #1a1c24 !important;
         color: white !important;
     }
-    section[data-testid="stSidebar"] .stMarkdown h3 {
-        color: #4facfe !important;
-    }
-    section[data-testid="stSidebar"] .stMarkdown p {
-        color: #e2e8f0 !important;
-    }
+    section[data-testid="stSidebar"] .stMarkdown h3 { color: #4facfe !important; }
+    section[data-testid="stSidebar"] .stMarkdown p { color: #e2e8f0 !important; }
     .stButton>button { width: 100%; border-radius: 8px; font-weight: 600; }
     .main-title {
         font-family: 'Inter', sans-serif;
@@ -51,23 +47,34 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         margin-bottom: 2rem;
     }
-    /* Paperclip icon button styling */
-    div[data-testid="stPopover"] > button {
-        background: transparent !important;
-        border: none !important;
-        font-size: 1.5rem !important;
-        padding: 0.3rem !important;
+    /* Fix: push content up so chat input doesn't overlap */
+    .main .block-container { padding-bottom: 5rem !important; }
+    /* Style the paperclip popover button — fixed bottom-right */
+    #paperclip-anchor {
+        position: fixed;
+        bottom: 1.1rem;
+        right: 1.5rem;
+        z-index: 9999;
+    }
+    #paperclip-anchor div[data-testid="stPopover"] > button {
+        background: rgba(26,28,36,0.92) !important;
+        border: 1.5px solid #4facfe !important;
+        font-size: 1.35rem !important;
+        padding: 0.35rem 0.6rem !important;
         cursor: pointer !important;
         color: #4facfe !important;
         border-radius: 50% !important;
-        width: 2.5rem !important;
-        height: 2.5rem !important;
+        width: 2.6rem !important;
+        height: 2.6rem !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        box-shadow: 0 2px 12px rgba(79,172,254,0.25) !important;
+        backdrop-filter: blur(6px) !important;
     }
-    div[data-testid="stPopover"] > button:hover {
-        background: rgba(79, 172, 254, 0.15) !important;
+    #paperclip-anchor div[data-testid="stPopover"] > button:hover {
+        background: rgba(79,172,254,0.18) !important;
+        box-shadow: 0 4px 16px rgba(79,172,254,0.45) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -132,7 +139,9 @@ else:
     # --- APP UI ---
     
     def render_context_hub_icon():
-        """Renders the Context Hub as a compact 📎 paperclip icon button."""
+        """Renders the Context Hub as a fixed-position 📎 paperclip icon at bottom-right."""
+        # Inject a named anchor div and wrap popover inside it via HTML+JS trick
+        st.markdown('<div id="paperclip-anchor">', unsafe_allow_html=True)
         with st.popover("📎"):
             st.markdown("#### 📁 Context Hub (Cloud Persistent)")
             country = st.selectbox("Country Context", [
@@ -162,6 +171,7 @@ else:
                             st.success("✅ Indexed successfully!")
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
     # Sidebar
@@ -208,12 +218,11 @@ else:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
         
-        # Row: chat input + paperclip icon
-        col_input, col_clip = st.columns([0.95, 0.05])
-        with col_input:
-            prompt = st.chat_input("Ask a tax question...")
-        with col_clip:
-            render_context_hub_icon()
+        # st.chat_input at top level = auto sticks to bottom of page
+        prompt = st.chat_input("Ask a tax question...")
+        
+        # Paperclip rendered via fixed CSS anchor — always at bottom right
+        render_context_hub_icon()
         
         if prompt:
             with st.chat_message("user"):
@@ -235,7 +244,7 @@ else:
                 placeholder = st.empty()
                 with st.spinner("Searching cloud context and datasets..."):
                     # Search pgvector index
-                    retrieved_docs = search_supabase_index(st.session_state["user_id"], prompt, top_k=5)
+                    retrieved_docs = search_supabase_index(st.session_state["user_id"], prompt, top_k=8)
                     # Generate with LLM
                     full_response = generate_response(prompt, retrieved_docs)
                     
@@ -253,12 +262,7 @@ else:
     else:
         st.markdown("<h1 class='main-title'>Global Tax AI Hub</h1>", unsafe_allow_html=True)
         st.info("👋 Select or create a chat to begin. Your uploaded documents are permanently indexed in Supabase pgvector.")
-        
-        # Show paperclip icon even on the empty state
-        _, col_clip = st.columns([0.95, 0.05])
-        with col_clip:
-            render_context_hub_icon()
-        
+        render_context_hub_icon()
         st.markdown("""
         **System Specs:**
         - **LLM**: Mistral-7B-Instruct (Cloud)

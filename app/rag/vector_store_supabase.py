@@ -112,7 +112,7 @@ def search_supabase_index(user_id: str, query: str, top_k: int = 5) -> List[Docu
             "match_document_chunks",
             {
                 "query_embedding": query_embedding,
-                "match_threshold": 0.5,
+                "match_threshold": 0.35,
                 "match_count": top_k,
                 "p_user_id": user_id
             }

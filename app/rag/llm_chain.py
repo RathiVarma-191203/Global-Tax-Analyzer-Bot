@@ -34,40 +34,41 @@ def get_hf_dataset_context() -> str:
         print(f"Error loading HF dataset: {e}")
         return "No additional financial dataset knowledge available at this time."
 
-PROMPT_TEMPLATE = """
-You are a Global Tax Intelligence Assistant.
+SYSTEM_PROMPT = """You are a precise and expert Global Tax Intelligence Assistant.
+Your job is to answer the user's specific tax question accurately and concisely.
+Rules:
+- Answer ONLY what the user asked. Do NOT add unrelated country comparisons unless the user explicitly asked to compare countries.
+- Use the provided context as your primary source.
+- If context has the answer, cite specific rates, rules, sections, or policies from it.
+- If context does not contain enough information, say clearly: "This specific data is not available in the current knowledge base."
+- Do not pad responses with generic summaries or repetitive key insights.
+- Format with markdown: use headings, bullet points, and tables ONLY when they genuinely improve clarity for the specific question.
+- Be detailed and technically accurate (mention exact percentages, thresholds, section numbers where relevant).
+- Never invent data. Never say "Not found in data" as a bullet point filler — only say it once if truly nothing is relevant."""
 
-Context:
+PROMPT_TEMPLATE = """Relevant context retrieved from tax documents:
+---
 {retrieved_chunks}
+---
 
-Dataset Knowledge:
-{hf_dataset_context}
+User Question: {query}
 
-User Query:
-{query}
-
-Instructions:
-- Answer ONLY using context + dataset
-- If comparing countries, format clearly
-- Extract tax rates, rules, policies
-- If missing info -> say "Not found in data"
-- Be structured and concise
-
-Output Format:
-- Summary
-- Country-wise comparison
-- Key insights
+Answer the above question directly and precisely using only the context provided above. Structure your response to match the nature of the question:
+- For "what is" questions: give a clear, direct definition with relevant specifics.
+- For rate/percentage questions: list exact rates, thresholds, and any conditions.
+- For "how" or procedure questions: give step-by-step guidance.
+- For comparison questions (only if explicitly asked): use a table.
+- Do NOT add a "Country-wise Comparison" section unless the question explicitly asks to compare countries.
+- Do NOT add a generic "Summary" or "Key Insights" section unless required by the question's complexity.
 """
 
 def generate_response(query: str, retrieved_docs: List[Document]) -> str:
     """Query the LLM using the modern Hugging Face Inference API."""
     
     retrieved_chunks = "\n\n".join([doc.page_content for doc in retrieved_docs])
-    hf_dataset_context = get_hf_dataset_context()
     
-    prompt = PROMPT_TEMPLATE.format(
-        retrieved_chunks=retrieved_chunks if retrieved_chunks else "No relevant document context found.",
-        hf_dataset_context=hf_dataset_context,
+    user_message = PROMPT_TEMPLATE.format(
+        retrieved_chunks=retrieved_chunks if retrieved_chunks else "No relevant document context found for this query.",
         query=query
     )
     
@@ -75,11 +76,11 @@ def generate_response(query: str, retrieved_docs: List[Document]) -> str:
     payload = {
         "model": MODEL_ID,
         "messages": [
-            {"role": "system", "content": "You are a professional tax assistant."},
-            {"role": "user", "content": prompt}
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_message}
         ],
-        "max_tokens": 1000,
-        "temperature": 0.1,
+        "max_tokens": 1500,
+        "temperature": 0.05,
         "stream": False
     }
     
