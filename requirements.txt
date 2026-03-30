@@ -15,6 +15,7 @@ supabase
 langchain
 langchain-community
 langchain-huggingface
+langchain-text-splitters
 # Use a flexible version of faiss-cpu
 faiss-cpu
 

@@ -4,7 +4,7 @@ Document processor: extract text from PDF, Excel, DOCX, then chunk for embedding
 import fitz  # PyMuPDF
 import pandas as pd
 from docx import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Tuple
 import io
 import re
