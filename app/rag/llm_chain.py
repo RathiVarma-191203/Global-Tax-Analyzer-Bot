@@ -37,49 +37,59 @@ def get_hf_dataset_context() -> str:
 SYSTEM_PROMPT = """You are a precise and expert Global Tax Intelligence Assistant.
 Your job is to answer the user's specific tax question accurately and concisely.
 Rules:
+- Carefully read any CONVERSATION HISTORY provided to understand the topic and context before answering.
+- If the user's current query is short (a keyword or phrase), interpret it as a follow-up to the conversation history and give a detailed, relevant answer about that specific topic.
 - Answer ONLY what the user asked. Do NOT add unrelated country comparisons unless the user explicitly asked to compare countries.
-- Use the provided context as your primary source.
-- If context has the answer, cite specific rates, rules, sections, or policies from it.
-- If context does not contain enough information, say clearly: "This specific data is not available in the current knowledge base."
-- Do not pad responses with generic summaries or repetitive key insights.
-- Format with markdown: use headings, bullet points, and tables ONLY when they genuinely improve clarity for the specific question.
-- Be detailed and technically accurate (mention exact percentages, thresholds, section numbers where relevant).
-- Never invent data. Never say "Not found in data" as a bullet point filler — only say it once if truly nothing is relevant."""
+- Use the provided DOCUMENT CONTEXT as your primary source. If the document context is relevant, cite exact rates, rules, section numbers, thresholds, and policies.
+- If context does not contain enough information, say: "This specific data is not available in the current knowledge base." — say this ONCE, not as a bullet filler.
+- Format with markdown using headings, bullet points, and tables ONLY when they genuinely improve clarity.
+- Be detailed and technically accurate: mention exact percentages, thresholds, section numbers where relevant.
+- Never invent data. Never pad responses with irrelevant country comparisons or generic summaries."""
 
-PROMPT_TEMPLATE = """Relevant context retrieved from tax documents:
+PROMPT_TEMPLATE = """DOCUMENT CONTEXT (retrieved from tax knowledge base):
 ---
 {retrieved_chunks}
 ---
 
-User Question: {query}
+{history_section}
+Current User Question: {query}
 
-Answer the above question directly and precisely using only the context provided above. Structure your response to match the nature of the question:
-- For "what is" questions: give a clear, direct definition with relevant specifics.
-- For rate/percentage questions: list exact rates, thresholds, and any conditions.
-- For "how" or procedure questions: give step-by-step guidance.
-- For comparison questions (only if explicitly asked): use a table.
-- Do NOT add a "Country-wise Comparison" section unless the question explicitly asks to compare countries.
-- Do NOT add a generic "Summary" or "Key Insights" section unless required by the question's complexity.
+Answer the above question directly and precisely. If the question is a short keyword or follow-up, use the conversation history above to understand what topic is being asked about and answer it thoroughly.
+- For deduction/section questions: list exact limits, conditions, eligible items.
+- For rate questions: list exact percentages and thresholds.
+- For procedure/how questions: give step-by-step guidance.
+- Do NOT add "Country-wise Comparison" unless explicitly asked.
+- Do NOT add "Summary" or "Key Insights" sections unless needed for complex multi-part answers.
 """
 
-def generate_response(query: str, retrieved_docs: List[Document]) -> str:
-    """Query the LLM using the modern Hugging Face Inference API."""
+def generate_response(query: str, retrieved_docs: List[Document], chat_history: list = None) -> str:
+    """Query the LLM. Accepts optional chat_history list of {role, content} dicts."""
     
     retrieved_chunks = "\n\n".join([doc.page_content for doc in retrieved_docs])
     
+    # Build history section for context on short/follow-up queries
+    history_section = ""
+    if chat_history:
+        recent = chat_history[-6:]  # last 3 exchanges
+        lines = []
+        for msg in recent:
+            role = "User" if msg["role"] == "user" else "Assistant"
+            lines.append(f"{role}: {msg['content'][:300]}")  # truncate long msgs
+        history_section = "CONVERSATION HISTORY (for context on follow-up queries):\n" + "\n".join(lines) + "\n\n"
+    
     user_message = PROMPT_TEMPLATE.format(
         retrieved_chunks=retrieved_chunks if retrieved_chunks else "No relevant document context found for this query.",
+        history_section=history_section,
         query=query
     )
     
-    # Using the Chat Completion format for the new router
     payload = {
         "model": MODEL_ID,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_message}
         ],
-        "max_tokens": 1500,
+        "max_tokens": 1800,
         "temperature": 0.05,
         "stream": False
     }
@@ -94,13 +104,11 @@ def generate_response(query: str, retrieved_docs: List[Document]) -> str:
         return f"Error: Unexpected response format: {json.dumps(result)}"
         
     except Exception as e:
-        # Fallback to the model-specific URL if the router is not available for this model
-        # But generally, 410 Gone means we MUST use the new endpoint.
         return f"Error connecting to LLM: {str(e)}"
 
-def generate_response_stream(query: str, retrieved_docs: List[Document]):
+def generate_response_stream(query: str, retrieved_docs: List[Document], chat_history: list = None):
     """Simulate streaming for the UI."""
-    full_text = generate_response(query, retrieved_docs)
+    full_text = generate_response(query, retrieved_docs, chat_history)
     import time
     for word in full_text.split(" "):
         yield word + " "

@@ -47,34 +47,45 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         margin-bottom: 2rem;
     }
-    /* Fix: push content up so chat input doesn't overlap */
+    /* Push content above the pinned chat bar */
     .main .block-container { padding-bottom: 5rem !important; }
-    /* Style the paperclip popover button — fixed bottom-right */
+
+    /* ── Paperclip: float it INSIDE the chat input bar ── */
+    /* Streamlit chat input container sits at fixed bottom */
+    .stChatInputContainer {
+        position: relative !important;
+    }
+    /* Position the paperclip anchor div to sit inside the input row */
     #paperclip-anchor {
         position: fixed;
-        bottom: 1.1rem;
-        right: 1.5rem;
-        z-index: 9999;
+        /* Align vertically with the chat input bar */
+        bottom: 0.72rem;
+        /* Push to the right edge, just left of the send button (~46px wide) */
+        right: 3.6rem;
+        z-index: 10001;
+        display: flex;
+        align-items: center;
     }
+    /* The popover trigger button — minimal icon style */
     #paperclip-anchor div[data-testid="stPopover"] > button {
-        background: rgba(26,28,36,0.92) !important;
-        border: 1.5px solid #4facfe !important;
-        font-size: 1.35rem !important;
-        padding: 0.35rem 0.6rem !important;
+        background: transparent !important;
+        border: none !important;
+        font-size: 1.25rem !important;
+        padding: 0.3rem !important;
         cursor: pointer !important;
-        color: #4facfe !important;
-        border-radius: 50% !important;
-        width: 2.6rem !important;
-        height: 2.6rem !important;
+        color: #a0aec0 !important;
+        border-radius: 6px !important;
+        width: 2rem !important;
+        height: 2rem !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: 0 2px 12px rgba(79,172,254,0.25) !important;
-        backdrop-filter: blur(6px) !important;
+        line-height: 1 !important;
+        transition: color 0.15s, background 0.15s !important;
     }
     #paperclip-anchor div[data-testid="stPopover"] > button:hover {
-        background: rgba(79,172,254,0.18) !important;
-        box-shadow: 0 4px 16px rgba(79,172,254,0.45) !important;
+        color: #4facfe !important;
+        background: rgba(79,172,254,0.1) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -245,8 +256,11 @@ else:
                 with st.spinner("Searching cloud context and datasets..."):
                     # Search pgvector index
                     retrieved_docs = search_supabase_index(st.session_state["user_id"], prompt, top_k=8)
-                    # Generate with LLM
-                    full_response = generate_response(prompt, retrieved_docs)
+                    # Generate with LLM — pass chat history for follow-up query context
+                    full_response = generate_response(
+                        prompt, retrieved_docs,
+                        chat_history=st.session_state["messages"]
+                    )
                     
                     # Typing Animation
                     typed = ""
