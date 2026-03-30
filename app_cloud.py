@@ -31,7 +31,6 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stChatMessage { border-radius: 12px; padding: 15px; margin-bottom: 10px; }
-    /* High contrast sidebar styling */
     section[data-testid="stSidebar"] {
         background-color: #1a1c24 !important;
         color: white !important;
@@ -51,6 +50,24 @@ st.markdown("""
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 2rem;
+    }
+    /* Paperclip icon button styling */
+    div[data-testid="stPopover"] > button {
+        background: transparent !important;
+        border: none !important;
+        font-size: 1.5rem !important;
+        padding: 0.3rem !important;
+        cursor: pointer !important;
+        color: #4facfe !important;
+        border-radius: 50% !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    div[data-testid="stPopover"] > button:hover {
+        background: rgba(79, 172, 254, 0.15) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -114,30 +131,39 @@ if not st.session_state["access_token"]:
 else:
     # --- APP UI ---
     
-    def render_context_hub():
-        with st.popover("📁 Manage Context Hub (Cloud)", use_container_width=True):
-            country = st.selectbox("Country Context", ["Global", "Australia", "India", "USA", "UK", "Canada", "Germany", "China"])
-            uploaded_file = st.file_uploader("PDF/Excel/DOCX", type=["pdf", "xlsx", "xls", "docx", "csv"])
-            if uploaded_file and st.button("🚀 Index to pgvector"):
-                with st.spinner(f"Processing and Embedding {uploaded_file.name}..."):
-                    try:
-                        file_bytes = uploaded_file.read()
-                        storage_path = f"{st.session_state['user_id']}/{uploaded_file.name}"
-                        public_url = upload_file_to_storage(file_bytes, storage_path)
-                        full_text, chunks = process_document(file_bytes, uploaded_file.name)
-                        doc_record = save_document_metadata(
-                            st.session_state['user_id'], uploaded_file.name, 
-                            public_url, uploaded_file.name.split('.')[-1], country, "supabase_pgvector"
-                        )
-                        metadata = [{"source": uploaded_file.name, "country": country}] * len(chunks)
-                        add_documents_to_supabase(
-                            st.session_state['user_id'], doc_record["id"], chunks, metadata
-                        )
-                        st.success(f"Successfully indexed to your cloud hub!")
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
+    def render_context_hub_icon():
+        """Renders the Context Hub as a compact 📎 paperclip icon button."""
+        with st.popover("📎"):
+            st.markdown("#### 📁 Context Hub (Cloud Persistent)")
+            country = st.selectbox("Country Context", [
+                "Global", "Australia", "India", "USA", "UK", "Canada", "Germany", "China"
+            ], key="ctx_country")
+            uploaded_file = st.file_uploader(
+                "Upload PDF / Excel / DOCX",
+                type=["pdf", "xlsx", "xls", "docx", "csv"],
+                key="ctx_uploader"
+            )
+            if uploaded_file:
+                if st.button("🚀 Index to Cloud", key="ctx_index_btn"):
+                    with st.spinner(f"Processing {uploaded_file.name}..."):
+                        try:
+                            file_bytes = uploaded_file.read()
+                            storage_path = f"{st.session_state['user_id']}/{uploaded_file.name}"
+                            public_url = upload_file_to_storage(file_bytes, storage_path)
+                            full_text, chunks = process_document(file_bytes, uploaded_file.name)
+                            doc_record = save_document_metadata(
+                                st.session_state['user_id'], uploaded_file.name,
+                                public_url, uploaded_file.name.split('.')[-1], country, "supabase_pgvector"
+                            )
+                            metadata = [{"source": uploaded_file.name, "country": country}] * len(chunks)
+                            add_documents_to_supabase(
+                                st.session_state['user_id'], doc_record["id"], chunks, metadata
+                            )
+                            st.success("✅ Indexed successfully!")
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
 
-    
+
     # Sidebar
     with st.sidebar:
         st.markdown(f"**🛡️ User:** {st.session_state['email']}")
@@ -182,9 +208,14 @@ else:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
         
-        render_context_hub()
+        # Row: chat input + paperclip icon
+        col_input, col_clip = st.columns([0.95, 0.05])
+        with col_input:
+            prompt = st.chat_input("Ask a tax question...")
+        with col_clip:
+            render_context_hub_icon()
         
-        if prompt := st.chat_input("Ask a tax question..."):
+        if prompt:
             with st.chat_message("user"):
                 st.markdown(prompt)
             st.session_state["messages"].append({"role": "user", "content": prompt})
@@ -223,7 +254,10 @@ else:
         st.markdown("<h1 class='main-title'>Global Tax AI Hub</h1>", unsafe_allow_html=True)
         st.info("👋 Select or create a chat to begin. Your uploaded documents are permanently indexed in Supabase pgvector.")
         
-        render_context_hub()
+        # Show paperclip icon even on the empty state
+        _, col_clip = st.columns([0.95, 0.05])
+        with col_clip:
+            render_context_hub_icon()
         
         st.markdown("""
         **System Specs:**

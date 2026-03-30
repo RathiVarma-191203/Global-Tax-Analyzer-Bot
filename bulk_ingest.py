@@ -94,7 +94,7 @@ def bulk_ingest():
 
                 # D. Embed + store in pgvector
                 metadata = [{"source": file_name, "country": display_country}] * len(chunks)
-                add_documents_to_supabase(user_id, doc_record["id"], chunks, metadata)
+                add_documents_to_supabase(user_id, doc_record["id"], chunks, metadata, use_direct_db=True)
 
                 print(f"    ✅ Indexed successfully!")
 

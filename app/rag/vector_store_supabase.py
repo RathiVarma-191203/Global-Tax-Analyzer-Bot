@@ -11,21 +11,64 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def add_documents_to_supabase(user_id: str, document_id: str, chunks: List[str], metadatas: List[Dict[Any, Any]]):
+def _insert_chunks_direct(user_id: str, document_id: str, chunks: List[str], metadatas: List[Dict[Any, Any]], embeddings_model):
+    """
+    Insert chunks directly via psycopg2, bypassing Supabase RLS.
+    Used by bulk_ingest.py to avoid auth issues.
+    """
+    import psycopg2
+    import json
+    from psycopg2.extras import execute_batch
+    
+    conn = psycopg2.connect(
+        host="aws-1-ap-northeast-1.pooler.supabase.com",
+        port=6543,
+        dbname="postgres",
+        user="postgres.uthyxhcovkcfkjtsyxoc",
+        password="Varma@191203",
+        sslmode="require"
+    )
+    conn.autocommit = True
+    cur = conn.cursor()
+    
+    batch = []
+    for i in range(0, len(chunks), 50):
+        batch_chunks = chunks[i:i+50]
+        batch_meta = metadatas[i:i+50]
+        vectors = embeddings_model.embed_documents(batch_chunks)
+        for text, meta, vec in zip(batch_chunks, batch_meta, vectors):
+            batch.append((
+                str(document_id), str(user_id), text,
+                json.dumps({**meta, "user_id": user_id, "document_id": str(document_id)}),
+                vec
+            ))
+    
+    execute_batch(cur, """
+        INSERT INTO public.document_chunks (document_id, user_id, content, metadata, embedding)
+        VALUES (%s, %s, %s, %s::jsonb, %s::vector)
+    """, batch, page_size=100)
+    cur.close()
+    conn.close()
+    return True
+
+
+def add_documents_to_supabase(user_id: str, document_id: str, chunks: List[str], metadatas: List[Dict[Any, Any]], sb_client=None, use_direct_db: bool = False):
     """
     Split chunks and add them to the Supabase pgvector store.
+    use_direct_db=True bypasses RLS via direct psycopg2 (for bulk ingestion).
     """
     embeddings = get_embeddings()
+    client = sb_client if sb_client is not None else supabase
     
-    # Enrich metadata with user_id and document_id for RLS and filtering
     for meta in metadatas:
         meta["user_id"] = user_id
         meta["document_id"] = document_id
     
-    # We'll use the LangChain SupabaseVectorStore wrapper
-    # Note: It requires a specific table structure (which we added in supabase_schema.sql)
+    if use_direct_db:
+        return _insert_chunks_direct(user_id, document_id, chunks, metadatas, embeddings)
+    
     vector_store = SupabaseVectorStore(
-        client=supabase,
+        client=client,
         embedding=embeddings,
         table_name="document_chunks",
         query_name="match_document_chunks",
