@@ -5,7 +5,7 @@ Connects with Hugging Face Inference API and uses a specific prompt template.
 import os
 import requests
 from typing import List, Optional
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from datasets import load_dataset
 from dotenv import load_dotenv
 
