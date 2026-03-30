@@ -14,10 +14,9 @@ load_dotenv()
 
 HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
 # Using Mistral 7B Instruct v0.3
-MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3"
-
+MODEL_ID = "meta-llama/Meta-Llama-3-8B-Instruct"
 # New Hugging Face Inference Endpoint (OpenAI-compatible)
-API_URL = "https://router.huggingface.co/hf-inference/v1/chat/completions"
+API_URL = "https://router.huggingface.co/v1/chat/completions"
 
 headers = {
     "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
