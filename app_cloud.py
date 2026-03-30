@@ -30,7 +30,17 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stChatMessage { border-radius: 12px; padding: 15px; margin-bottom: 10px; }
-    .stSidebar { background-color: #f7f9fc; }
+    /* High contrast sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #1a1c24 !important;
+        color: white !important;
+    }
+    section[data-testid="stSidebar"] .stMarkdown h3 {
+        color: #4facfe !important;
+    }
+    section[data-testid="stSidebar"] .stMarkdown p {
+        color: #e2e8f0 !important;
+    }
     .stButton>button { width: 100%; border-radius: 8px; font-weight: 600; }
     .main-title {
         font-family: 'Inter', sans-serif;

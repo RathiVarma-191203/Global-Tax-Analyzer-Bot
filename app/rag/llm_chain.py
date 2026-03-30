@@ -13,7 +13,7 @@ load_dotenv()
 
 HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
 # Using Mistral 7B Instruct as requested
-MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
+MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3"
 API_URL = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
 
 headers = {"Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}"}
