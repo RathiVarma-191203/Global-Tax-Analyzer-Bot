@@ -61,6 +61,10 @@ def bulk_ingest():
         "AUSTRALIA": "Australia",
         "INDIA":     "India",
         "US":        "USA",
+        "UK":        "UK",
+        "CANADA":    "Canada",
+        "GERMANY":   "Germany",
+        "CHINA":     "China"
     }
 
     for folder, display_country in country_map.items():

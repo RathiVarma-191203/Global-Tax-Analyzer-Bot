@@ -114,6 +114,30 @@ if not st.session_state["access_token"]:
 else:
     # --- APP UI ---
     
+    def render_context_hub():
+        with st.popover("📁 Manage Context Hub (Cloud)", use_container_width=True):
+            country = st.selectbox("Country Context", ["Global", "Australia", "India", "USA", "UK", "Canada", "Germany", "China"])
+            uploaded_file = st.file_uploader("PDF/Excel/DOCX", type=["pdf", "xlsx", "xls", "docx", "csv"])
+            if uploaded_file and st.button("🚀 Index to pgvector"):
+                with st.spinner(f"Processing and Embedding {uploaded_file.name}..."):
+                    try:
+                        file_bytes = uploaded_file.read()
+                        storage_path = f"{st.session_state['user_id']}/{uploaded_file.name}"
+                        public_url = upload_file_to_storage(file_bytes, storage_path)
+                        full_text, chunks = process_document(file_bytes, uploaded_file.name)
+                        doc_record = save_document_metadata(
+                            st.session_state['user_id'], uploaded_file.name, 
+                            public_url, uploaded_file.name.split('.')[-1], country, "supabase_pgvector"
+                        )
+                        metadata = [{"source": uploaded_file.name, "country": country}] * len(chunks)
+                        add_documents_to_supabase(
+                            st.session_state['user_id'], doc_record["id"], chunks, metadata
+                        )
+                        st.success(f"Successfully indexed to your cloud hub!")
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+
+    
     # Sidebar
     with st.sidebar:
         st.markdown(f"**🛡️ User:** {st.session_state['email']}")
@@ -148,34 +172,7 @@ else:
                     st.rerun()
         
         st.divider()
-        
-        # File Upload for RAG
-        st.markdown("### 📁 Context Hub (Cloud Persistent)")
-        with st.expander("Upload Tax Docs", expanded=True):
-            country = st.selectbox("Country Context", ["Global", "Australia", "India", "USA", "UK"])
-            uploaded_file = st.file_uploader("PDF/Excel/DOCX", type=["pdf", "xlsx", "xls", "docx", "csv"])
-            if uploaded_file and st.button("🚀 Index to pgvector"):
-                with st.spinner(f"Processing and Embedding {uploaded_file.name}..."):
-                    try:
-                        file_bytes = uploaded_file.read()
-                        # 1. Upload to Supabase Storage
-                        storage_path = f"{st.session_state['user_id']}/{uploaded_file.name}"
-                        public_url = upload_file_to_storage(file_bytes, storage_path)
-                        # 2. Extract and Chunk
-                        full_text, chunks = process_document(file_bytes, uploaded_file.name)
-                        # 3. Save Document Metadata
-                        doc_record = save_document_metadata(
-                            st.session_state['user_id'], uploaded_file.name, 
-                            public_url, uploaded_file.name.split('.')[-1], country, "supabase_pgvector"
-                        )
-                        # 4. Add to pgvector index
-                        metadata = [{"source": uploaded_file.name, "country": country}] * len(chunks)
-                        add_documents_to_supabase(
-                            st.session_state['user_id'], doc_record["id"], chunks, metadata
-                        )
-                        st.success(f"Successfully indexed to your cloud hub!")
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
+        st.divider()
 
     # Main Chat Area
     if st.session_state["current_chat_id"]:
@@ -184,6 +181,8 @@ else:
         for msg in st.session_state["messages"]:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
+        
+        render_context_hub()
         
         if prompt := st.chat_input("Ask a tax question..."):
             with st.chat_message("user"):
@@ -223,6 +222,9 @@ else:
     else:
         st.markdown("<h1 class='main-title'>Global Tax AI Hub</h1>", unsafe_allow_html=True)
         st.info("👋 Select or create a chat to begin. Your uploaded documents are permanently indexed in Supabase pgvector.")
+        
+        render_context_hub()
+        
         st.markdown("""
         **System Specs:**
         - **LLM**: Mistral-7B-Instruct (Cloud)
