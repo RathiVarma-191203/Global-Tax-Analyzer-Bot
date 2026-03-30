@@ -1,6 +1,13 @@
 # Local environment variables
 .env
 
+# PDF documents (uploaded to Supabase, not needed in repo)
+PDF/
+
+# Test/dev scripts (local use only)
+test_api.ps1
+test_rag.py
+
 # Python build artifacts
 __pycache__/
 *.pyc
