@@ -55,37 +55,45 @@ st.markdown("""
     .stChatInputContainer {
         position: relative !important;
     }
-    /* Position the paperclip anchor div to sit inside the input row */
-    #paperclip-anchor {
-        position: fixed;
-        /* Align vertically with the chat input bar */
-        bottom: 1.1rem;
-        /* Push to the right edge, just left of the send button (~46px wide) */
-        right: 4.5rem;
+    /* Position the popover containing the paperclip to float inside chat input */
+    div[data-testid="stPopover"] {
+        position: fixed !important;
+        bottom: 1.5rem !important;
+        /* Align it exactly at the left edge of the chat input area */
+        left: 50%;
+        transform: translateX(-340px);
         z-index: 10001;
         display: flex;
         align-items: center;
+        width: auto !important;
+    }
+    /* Make the chat input text area start further right so it doesn't overlap the paperclip */
+    .stChatInputContainer textarea {
+        padding-left: 3.5rem !important;
     }
     /* The popover trigger button — minimal icon style */
-    #paperclip-anchor div[data-testid="stPopover"] > button {
+    div[data-testid="stPopover"] > button {
         background: transparent !important;
         border: none !important;
-        font-size: 1.25rem !important;
+        font-size: 1.3rem !important;
         padding: 0.3rem !important;
         cursor: pointer !important;
         color: #a0aec0 !important;
         border-radius: 6px !important;
-        width: 2rem !important;
-        height: 2rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        line-height: 1 !important;
         transition: color 0.15s, background 0.15s !important;
     }
-    #paperclip-anchor div[data-testid="stPopover"] > button:hover {
+    div[data-testid="stPopover"] > button:hover {
         color: #4facfe !important;
         background: rgba(79,172,254,0.1) !important;
+    }
+    /* Hide the dropdown arrow from the button */
+    div[data-testid="stPopover"] > button span[data-testid="stIconMaterial"] {
+        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -151,8 +159,6 @@ else:
     
     def render_context_hub_icon():
         """Renders the Context Hub as a fixed-position 📎 paperclip icon at bottom-right."""
-        # Inject a named anchor div and wrap popover inside it via HTML+JS trick
-        st.markdown('<div id="paperclip-anchor">', unsafe_allow_html=True)
         with st.popover("📎"):
             st.markdown("#### 📁 Context Hub (Cloud Persistent)")
             country = st.selectbox("Country Context", [
@@ -182,7 +188,6 @@ else:
                             st.success("✅ Indexed successfully!")
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
-        st.markdown('</div>', unsafe_allow_html=True)
 
 
     # Sidebar
