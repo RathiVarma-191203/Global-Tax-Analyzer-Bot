@@ -59,9 +59,9 @@ st.markdown("""
     #paperclip-anchor {
         position: fixed;
         /* Align vertically with the chat input bar */
-        bottom: 0.72rem;
+        bottom: 1.1rem;
         /* Push to the right edge, just left of the send button (~46px wide) */
-        right: 3.6rem;
+        right: 4.5rem;
         z-index: 10001;
         display: flex;
         align-items: center;
