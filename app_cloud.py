@@ -48,95 +48,6 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         margin-bottom: 2rem;
     }
-    /* ── Paperclip & Mic: Clean up for JS positioning ── */
-    /* Hide initially using a class that JS will remove */
-    .grok-icon-hidden {
-        display: none !important;
-    }
-    
-    [data-testid="stChatInput"] > div {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 4px !important;
-        padding: 5px 15px !important;
-        min-height: 85px !important; 
-        border-radius: 42px !important;
-        background-color: #1a1c24 !important;
-        border: 2px solid rgba(255,255,255,0.1) !important;
-        transition: border-color 0.3s, box-shadow 0.3s !important;
-    }
-    
-    /* Focus Glow effect */
-    [data-testid="stChatInput"] > div:focus-within {
-        border-color: rgba(79,172,254,0.4) !important;
-        box-shadow: 0 0 15px rgba(79,172,254,0.15) !important;
-    }
-
-    [data-testid="stChatInputTextArea"] {
-        order: 2 !important; /* Center - after paperclip */
-        background: transparent !important;
-        border: none !important;
-        flex-grow: 1 !important;
-        font-size: 1.15rem !important;
-        line-height: 1.5 !important;
-        padding: 10px 5px !important;
-        color: white !important;
-    }
-
-    /* Move Paperclip to very start */
-    div[data-testid="stPopover"] {
-        order: 1 !important;
-        position: static !important;
-        margin-right: 15px !important;
-    }
-    
-    /* Move Mic next to textarea */
-    .grok-voice-btn {
-        order: 3 !important;
-        position: static !important;
-        font-size: 1.6rem;
-        color: #a0aec0;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 3.2rem;
-        height: 3.2rem;
-        margin-right: 10px !important;
-    }
-
-    /* Move submit button to the very end */
-    [data-testid="stChatInput"] button {
-        order: 4 !important;
-        background: transparent !important;
-        border: none !important;
-    }
-
-    /* The popover trigger button — minimal icon style */
-    div[data-testid="stPopover"] > button {
-        background: transparent !important;
-        border: none !important;
-        font-size: 1.3rem !important;
-        padding: 0.3rem !important;
-        cursor: pointer !important;
-        color: #a0aec0 !important;
-        border-radius: 6px !important;
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: color 0.15s, background 0.15s !important;
-    }
-    div[data-testid="stPopover"] > button:hover {
-        color: #4facfe !important;
-        background: rgba(79,172,254,0.1) !important;
-    }
-    /* Hide the dropdown arrow from the button */
-    div[data-testid="stPopover"] > button span[data-testid="stIconMaterial"] {
-        display: none !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -200,8 +111,8 @@ else:
     # --- APP UI ---
     
     def render_context_hub_icon():
-        """Renders the Context Hub as a fixed-position 📎 paperclip icon at bottom-right."""
-        with st.popover("📎"):
+        """Renders the Context Hub UI for document upload."""
+        with st.popover("📎 Upload Context", use_container_width=True):
             st.markdown("#### 📁 Context Hub (Cloud Persistent)")
             country = st.selectbox("Country Context", [
                 "Global", "Australia", "India", "USA", "UK", "Canada", "Germany", "China"
@@ -266,6 +177,7 @@ else:
                     st.rerun()
         
         st.divider()
+        render_context_hub_icon()
         st.divider()
 
     # Main Chat Area
@@ -278,21 +190,6 @@ else:
         
         # st.chat_input at top level = auto sticks to bottom of page
         prompt = st.chat_input("Ask anything...")
-        
-        # Injected via JS into the chat input bar for Grok-style look
-        st.markdown('<div class="grok-voice-btn grok-icon-hidden" title="Voice Mode">🎙️</div>', unsafe_allow_html=True)
-        
-        # Paperclip logic (Popover)
-        if "attachment_sidebar" not in st.session_state:
-            st.session_state["attachment_sidebar"] = False
-        
-        hub_container = st.sidebar if st.session_state["attachment_sidebar"] else st.container()
-        with hub_container:
-            hub_popover = st.popover("📎", use_container_width=False)
-            # Add a class for JS targeting
-            st.markdown('<style>div[data-testid="stPopover"] { display: inline-block; }</style>', unsafe_allow_html=True)
-            # JS will remove this class if we add it via Markdown
-            st.markdown('<div class="paperclip-anchor grok-icon-hidden"></div>', unsafe_allow_html=True)
         
         if prompt:
             with st.chat_message("user"):
@@ -335,56 +232,9 @@ else:
     else:
         st.markdown("<h1 class='main-title'>Global Tax AI Hub</h1>", unsafe_allow_html=True)
         st.info("👋 Select or create a chat to begin. Your uploaded documents are permanently indexed in Supabase pgvector.")
-        render_context_hub_icon()
         st.markdown("""
         **System Specs:**
         - **LLM**: Mistral-7B-Instruct (Cloud)
         - **Vector DB**: Supabase pgvector (Permanent)
         - **Datasets**: HF Financial Phrasebank
         """)
-
-# --- Precision Grok-Style DOM Injection Hack ---
-components.html("""
-<script>
-function attachIcons() {
-    try {
-        const parentDoc = window.parent.document;
-        if (!parentDoc) return;
-        
-        // Find icons and the chat input container's inner flex div
-        const paperclip = parentDoc.querySelector('div[data-testid="stPopover"]');
-        const mic = parentDoc.querySelector('.grok-voice-btn');
-        const containerInner = parentDoc.querySelector('div[data-testid="stChatInput"] > div');
-
-        if (containerInner && paperclip && mic && !containerInner.contains(paperclip)) {
-            // Snap them into the flex layout
-            containerInner.appendChild(paperclip);
-            containerInner.appendChild(mic);
-            
-            // Reveal them
-            paperclip.classList.remove('grok-icon-hidden');
-            mic.classList.remove('grok-icon-hidden');
-            
-            // Textarea styling
-            const txt = containerInner.querySelector('textarea');
-            if (txt) {
-                txt.style.boxShadow = 'none';
-                txt.style.borderColor = 'transparent';
-                txt.style.order = '2'; // Ensure correct order
-            }
-            
-            // Send button styling
-            const btn = containerInner.querySelector('button');
-            if (btn) {
-                btn.style.order = '4'; // Far right
-            }
-        }
-    } catch (e) {
-        console.error("Grok UI Injection Error:", e);
-    }
-}
-
-// Run on a loop to ensure icons stay in the box after rerenders
-setInterval(attachIcons, 300);
-</script>
-""", height=0)
