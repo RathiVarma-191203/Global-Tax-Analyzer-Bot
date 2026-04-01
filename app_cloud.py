@@ -54,32 +54,34 @@ st.markdown("""
     /* Streamlit chat input container sits at fixed bottom */
     [data-testid="stChatInput"] {
         position: relative !important;
-        z-index: 1000000 !important;
+        background: transparent !important;
     }
     
     /* Position the popover containing the paperclip specifically */
     div[data-testid="stPopover"] {
         position: fixed !important;
-        bottom: 1.6rem !important; /* Adjusted for standard input height */
+        bottom: 23px !important; 
         left: 50% !important;
-        transform: translateX(-355px) !important; /* Adjusted for better alignment */
+        transform: translateX(-355px) !important;
         z-index: 1000001 !important;
         width: auto !important;
     }
 
     /* Make the chat input text area start further right and end earlier */
     [data-testid="stChatInputTextArea"] {
-        padding-left: 3.5rem !important;
-        padding-right: 3.5rem !important;
-        border-radius: 20px !important; /* Rounded Grok look */
+        padding-left: 3.8rem !important;
+        padding-right: 3.8rem !important;
+        border-radius: 30px !important; /* Elegant Grok rounded look */
+        background-color: #1a1c24 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
     }
 
     /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
     .grok-voice-btn {
         position: fixed !important;
-        bottom: 1.6rem !important;
+        bottom: 23px !important; 
         left: 50% !important;
-        transform: translateX(295px) !important;
+        transform: translateX(290px) !important;
         z-index: 1000001 !important;
         font-size: 1.3rem;
         padding: 0.3rem;
