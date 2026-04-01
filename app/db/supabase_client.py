@@ -33,14 +33,24 @@ def create_chat(user_id: str, title: str = "New Chat") -> dict:
 
 
 def get_chats(user_id: str) -> list:
-    response = (
-        supabase.table("chats")
-        .select("*")
-        .eq("user_id", user_id)
-        .order("updated_at", desc=True)
-        .execute()
-    )
-    return response.data or []
+    """Fetches chats with a retry mechanism for transient SSL/Connection errors."""
+    import time
+    for attempt in range(3):
+        try:
+            response = (
+                supabase.table("chats")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("updated_at", desc=True)
+                .execute()
+            )
+            return response.data or []
+        except Exception as e:
+            if attempt == 2:
+                # If it still fails, raise it
+                raise e
+            time.sleep(1) # Wait briefly before retrying
+    return []
 
 
 def delete_chat(chat_id: str) -> bool:

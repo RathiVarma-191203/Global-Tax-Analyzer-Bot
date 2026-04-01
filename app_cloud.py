@@ -52,34 +52,35 @@ st.markdown("""
 
     /* ── Paperclip: float it INSIDE the chat input bar ── */
     /* Streamlit chat input container sits at fixed bottom */
-    .stChatInputContainer {
+    [data-testid="stChatInput"] {
         position: relative !important;
+        z-index: 1000000 !important;
     }
-    /* Position the popover containing the paperclip to float inside chat input */
+    
+    /* Position the popover containing the paperclip specifically */
     div[data-testid="stPopover"] {
         position: fixed !important;
-        bottom: 1.5rem !important;
-        /* Align it exactly at the left edge of the chat input area */
-        left: 50%;
-        transform: translateX(-340px);
-        z-index: 10001;
-        display: flex;
-        align-items: center;
+        bottom: 1.6rem !important; /* Adjusted for standard input height */
+        left: 50% !important;
+        transform: translateX(-355px) !important; /* Adjusted for better alignment */
+        z-index: 1000001 !important;
         width: auto !important;
     }
-    /* Make the chat input text area start further right so it doesn't overlap the paperclip, and end earlier so it doesn't overlap the voice button */
-    .stChatInputContainer textarea {
+
+    /* Make the chat input text area start further right and end earlier */
+    [data-testid="stChatInputTextArea"] {
         padding-left: 3.5rem !important;
         padding-right: 3.5rem !important;
+        border-radius: 20px !important; /* Rounded Grok look */
     }
 
     /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
     .grok-voice-btn {
         position: fixed !important;
-        bottom: 1.5rem !important;
-        left: 50%;
-        transform: translateX(270px); /* Position inside the right edge of chat input */
-        z-index: 10001;
+        bottom: 1.6rem !important;
+        left: 50% !important;
+        transform: translateX(295px) !important;
+        z-index: 1000001 !important;
         font-size: 1.3rem;
         padding: 0.3rem;
         color: #a0aec0;
