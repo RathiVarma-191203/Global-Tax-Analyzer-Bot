@@ -112,7 +112,7 @@ else:
     
     def render_context_hub_icon():
         """Renders the Context Hub UI for document upload."""
-        with st.popover("📎 Upload Context", use_container_width=True):
+        with st.popover("📎", use_container_width=False):
             st.markdown("#### 📁 Context Hub (Cloud Persistent)")
             country = st.selectbox("Country Context", [
                 "Global", "Australia", "India", "USA", "UK", "Canada", "Germany", "China"
@@ -177,16 +177,49 @@ else:
                     st.rerun()
         
         st.divider()
-        render_context_hub_icon()
-        st.divider()
 
     # Main Chat Area
     if st.session_state["current_chat_id"]:
         st.markdown(f"### Tax Intellectual Core ⚖️")
         
+        # Apply CSS for the pinned paperclip button
+        st.markdown("""
+        <style>
+            div[data-testid="stPopover"] {
+                position: fixed !important;
+                bottom: 100px !important;
+                z-index: 1000 !important;
+            }
+            div[data-testid="stPopover"] > button {
+                border-radius: 50% !important;
+                width: 3rem !important;
+                height: 3rem !important;
+                border: 2px solid rgba(255,255,255,0.1) !important;
+                background-color: #1a1c24 !important;
+                padding: 0 !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                font-size: 1.5rem !important;
+                transition: all 0.2s ease-in-out !important;
+            }
+            div[data-testid="stPopover"] > button span[data-testid="stIconMaterial"] {
+                display: none !important;
+            }
+            div[data-testid="stPopover"] > button:hover {
+                background-color: #2E3192 !important;
+                border-color: #1BFFFF !important;
+                transform: scale(1.05) !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        
         for msg in st.session_state["messages"]:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
+        
+        # Render the context hub icon right above the chat input
+        render_context_hub_icon()
         
         # st.chat_input at top level = auto sticks to bottom of page
         prompt = st.chat_input("Ask anything...")
