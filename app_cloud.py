@@ -49,63 +49,68 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     /* ── Paperclip & Mic: Clean up for JS positioning ── */
-    /* Hide initially to prevent flashing at the top */
-    div[data-testid="stPopover"], .grok-voice-btn {
-        visibility: hidden !important; 
-        position: static !important;
+    /* Hide initially using a class that JS will remove */
+    .grok-icon-hidden {
+        display: none !important;
     }
     
     [data-testid="stChatInput"] > div {
         display: flex !important;
+        flex-direction: row !important;
         align-items: center !important;
-        gap: 8px !important;
-        padding: 0 10px !important;
-        min-height: 85px !important; /* Premium Grok-size */
-        border-radius: 40px !important;
+        gap: 4px !important;
+        padding: 5px 15px !important;
+        min-height: 85px !important; 
+        border-radius: 42px !important;
         background-color: #1a1c24 !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+        border: 2px solid rgba(255,255,255,0.1) !important;
+        transition: border-color 0.3s, box-shadow 0.3s !important;
     }
     
-    /* Paperclip Popover inside the flex bar */
-    div[data-testid="stPopover"] {
-        position: static !important;
-        width: auto !important;
-    }
-    
-    /* Mic icon inside the flex bar */
-    .grok-voice-btn {
-        position: static !important;
-        font-size: 1.5rem;
-        color: #a0aec0;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 3rem;
-        height: 3rem;
-        order: 2; /* Put after textarea */
+    /* Focus Glow effect */
+    [data-testid="stChatInput"] > div:focus-within {
+        border-color: rgba(79,172,254,0.4) !important;
+        box-shadow: 0 0 15px rgba(79,172,254,0.15) !important;
     }
 
     [data-testid="stChatInputTextArea"] {
-        order: 1 !important; /* Stay centered */
+        order: 2 !important; /* Center - after paperclip */
         background: transparent !important;
         border: none !important;
         flex-grow: 1 !important;
         font-size: 1.15rem !important;
         line-height: 1.5 !important;
-        padding: 10px 4rem !important; /* Add space for icons */
+        padding: 10px 5px !important;
+        color: white !important;
     }
 
-    /* Move submit button to the far right */
-    [data-testid="stChatInput"] button {
-        order: 3 !important;
+    /* Move Paperclip to very start */
+    div[data-testid="stPopover"] {
+        order: 1 !important;
+        position: static !important;
+        margin-right: 15px !important;
     }
     
-    /* Reveal icons once inside the bar */
-    [data-testid="stChatInput"] div[data-testid="stPopover"],
-    [data-testid="stChatInput"] .grok-voice-btn {
-        visibility: visible !important;
-        margin-top: -5px;
+    /* Move Mic next to textarea */
+    .grok-voice-btn {
+        order: 3 !important;
+        position: static !important;
+        font-size: 1.6rem;
+        color: #a0aec0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.2rem;
+        height: 3.2rem;
+        margin-right: 10px !important;
+    }
+
+    /* Move submit button to the very end */
+    [data-testid="stChatInput"] button {
+        order: 4 !important;
+        background: transparent !important;
+        border: none !important;
     }
 
     /* The popover trigger button — minimal icon style */
@@ -274,11 +279,20 @@ else:
         # st.chat_input at top level = auto sticks to bottom of page
         prompt = st.chat_input("Ask anything...")
         
-        # Paperclip rendered via fixed CSS anchor — always at bottom right
-        render_context_hub_icon()
+        # Injected via JS into the chat input bar for Grok-style look
+        st.markdown('<div class="grok-voice-btn grok-icon-hidden" title="Voice Mode">🎙️</div>', unsafe_allow_html=True)
         
-        # Voice Button (Visual Placeholder matching Grok) injected via HTML
-        st.markdown('<div class="grok-voice-btn" title="Voice Mode (Coming Soon)">🎙️</div>', unsafe_allow_html=True)
+        # Paperclip logic (Popover)
+        if "attachment_sidebar" not in st.session_state:
+            st.session_state["attachment_sidebar"] = False
+        
+        hub_container = st.sidebar if st.session_state["attachment_sidebar"] else st.container()
+        with hub_container:
+            hub_popover = st.popover("📎", use_container_width=False)
+            # Add a class for JS targeting
+            st.markdown('<style>div[data-testid="stPopover"] { display: inline-block; }</style>', unsafe_allow_html=True)
+            # JS will remove this class if we add it via Markdown
+            st.markdown('<div class="paperclip-anchor grok-icon-hidden"></div>', unsafe_allow_html=True)
         
         if prompt:
             with st.chat_message("user"):
@@ -333,33 +347,44 @@ else:
 components.html("""
 <script>
 function attachIcons() {
-    const parentDoc = window.parent.document;
-    
-    // Find icons and the chat input container's inner flex div
-    const paperclip = parentDoc.querySelector('div[data-testid="stPopover"]');
-    const mic = parentDoc.querySelector('.grok-voice-btn');
-    const containerInner = parentDoc.querySelector('div[data-testid="stChatInput"] > div');
+    try {
+        const parentDoc = window.parent.document;
+        if (!parentDoc) return;
+        
+        // Find icons and the chat input container's inner flex div
+        const paperclip = parentDoc.querySelector('div[data-testid="stPopover"]');
+        const mic = parentDoc.querySelector('.grok-voice-btn');
+        const containerInner = parentDoc.querySelector('div[data-testid="stChatInput"] > div');
 
-    if (containerInner && paperclip && mic && !containerInner.contains(paperclip)) {
-        // Move Paperclip to the very start of the bar
-        containerInner.prepend(paperclip);
-        
-        // Find send button and insert Mic right before it
-        const sendBtn = containerInner.querySelector('button');
-        if (sendBtn) {
-            containerInner.insertBefore(mic, sendBtn);
-        } else {
+        if (containerInner && paperclip && mic && !containerInner.contains(paperclip)) {
+            // Snap them into the flex layout
+            containerInner.appendChild(paperclip);
             containerInner.appendChild(mic);
+            
+            // Reveal them
+            paperclip.classList.remove('grok-icon-hidden');
+            mic.classList.remove('grok-icon-hidden');
+            
+            // Textarea styling
+            const txt = containerInner.querySelector('textarea');
+            if (txt) {
+                txt.style.boxShadow = 'none';
+                txt.style.borderColor = 'transparent';
+                txt.style.order = '2'; // Ensure correct order
+            }
+            
+            // Send button styling
+            const btn = containerInner.querySelector('button');
+            if (btn) {
+                btn.style.order = '4'; // Far right
+            }
         }
-        
-        // Final styling for static flex items
-        paperclip.style.visibility = 'visible';
-        mic.style.visibility = 'visible';
-        mic.style.order = '2'; // Ensure it follows the text area
+    } catch (e) {
+        console.error("Grok UI Injection Error:", e);
     }
 }
 
-// Streamlit rerenders frequently. Run on a loop to ensure icons stay in the box.
-setInterval(attachIcons, 500);
+// Run on a loop to ensure icons stay in the box after rerenders
+setInterval(attachIcons, 300);
 </script>
 """, height=0)
