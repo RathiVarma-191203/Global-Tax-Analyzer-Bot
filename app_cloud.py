@@ -60,17 +60,17 @@ st.markdown("""
     /* Position the popover containing the paperclip specifically */
     div[data-testid="stPopover"] {
         position: fixed !important;
-        bottom: 23px !important; 
+        bottom: 54px !important; /* Pulled up inside the bar */
         left: 50% !important;
-        transform: translateX(-355px) !important;
+        transform: translateX(-340px) !important;
         z-index: 1000001 !important;
         width: auto !important;
     }
 
     /* Make the chat input text area start further right and end earlier */
     [data-testid="stChatInputTextArea"] {
-        padding-left: 3.8rem !important;
-        padding-right: 3.8rem !important;
+        padding-left: 4rem !important; /* More space for paperclip */
+        padding-right: 4.5rem !important; /* More space for voice & send buttons */
         border-radius: 30px !important; /* Elegant Grok rounded look */
         background-color: #1a1c24 !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
@@ -79,9 +79,9 @@ st.markdown("""
     /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
     .grok-voice-btn {
         position: fixed !important;
-        bottom: 23px !important; 
+        bottom: 54px !important; 
         left: 50% !important;
-        transform: translateX(290px) !important;
+        transform: translateX(275px) !important; /* Positioned inside right before send button */
         z-index: 1000001 !important;
         font-size: 1.3rem;
         padding: 0.3rem;
