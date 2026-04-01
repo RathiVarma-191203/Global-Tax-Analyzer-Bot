@@ -629,7 +629,19 @@ def create_pdf(folder_name, data):
     doc = SimpleDocTemplate(path, pagesize=letter, leftMargin=0.75*inch, rightMargin=0.75*inch, topMargin=0.75*inch, bottomMargin=0.75*inch)
     title_s, section_s, body_s = styles()
     flow = [Paragraph(data["title"], title_s), HRFlowable(width="100%", thickness=2, color=colors.HexColor("#1a237e")), Spacer(1, 10)]
-    for section_title, lines in data["sections"]:
+    
+    universal_calc_section = ("General Tax Calculation Formula & Principles", [
+        "If a user asks a generic question like 'what is the amount tax I want to payable' or 'how much tax do I pay':",
+        "1. Determine their tax residency status and applicable country tax brackets.",
+        "2. Calculate Gross Income from all sources.",
+        "3. Subtract any standard allowances (like the US Standard Deduction, UK Personal Allowance, or Indian Standard Deduction) to find the Taxable Income.",
+        "4. Apply the progressive income tax brackets/slabs step-by-step to the Taxable Income.",
+        "5. Add any mandatory surcharges, cesses, or state/provincial taxes.",
+        "6. Subtract any eligible tax credits or rebates to determine the final Net Tax Payable.",
+        "If exact income is NOT provided by the user, explicitly list the above steps and provide the country's tax slabs so they can calculate it themselves."
+    ])
+    
+    for section_title, lines in data["sections"] + [universal_calc_section]:
         flow.append(Paragraph(section_title, section_s))
         for line in lines:
             flow.append(Paragraph(line, body_s))

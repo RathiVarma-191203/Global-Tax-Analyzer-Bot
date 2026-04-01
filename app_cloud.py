@@ -67,9 +67,34 @@ st.markdown("""
         align-items: center;
         width: auto !important;
     }
-    /* Make the chat input text area start further right so it doesn't overlap the paperclip */
+    /* Make the chat input text area start further right so it doesn't overlap the paperclip, and end earlier so it doesn't overlap the voice button */
     .stChatInputContainer textarea {
         padding-left: 3.5rem !important;
+        padding-right: 3.5rem !important;
+    }
+
+    /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
+    .grok-voice-btn {
+        position: fixed !important;
+        bottom: 1.5rem !important;
+        left: 50%;
+        transform: translateX(270px); /* Position inside the right edge of chat input */
+        z-index: 10001;
+        font-size: 1.3rem;
+        padding: 0.3rem;
+        color: #a0aec0;
+        border-radius: 6px;
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 0.15s, background 0.15s;
+    }
+    .grok-voice-btn:hover {
+        color: #4facfe;
+        background: rgba(79,172,254,0.1);
     }
     /* The popover trigger button — minimal icon style */
     div[data-testid="stPopover"] > button {
@@ -235,10 +260,13 @@ else:
                 st.markdown(msg["content"])
         
         # st.chat_input at top level = auto sticks to bottom of page
-        prompt = st.chat_input("Ask a tax question...")
+        prompt = st.chat_input("Ask anything...")
         
         # Paperclip rendered via fixed CSS anchor — always at bottom right
         render_context_hub_icon()
+        
+        # Voice Button (Visual Placeholder matching Grok) injected via HTML
+        st.markdown('<div class="grok-voice-btn" title="Voice Mode (Coming Soon)">🎙️</div>', unsafe_allow_html=True)
         
         if prompt:
             with st.chat_message("user"):
