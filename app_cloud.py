@@ -188,28 +188,24 @@ else:
             div[data-testid="stPopover"] {
                 position: fixed !important;
                 bottom: 100px !important;
+                left: 3rem !important;
                 z-index: 1000 !important;
             }
             div[data-testid="stPopover"] > button {
-                border-radius: 50% !important;
-                width: 3rem !important;
-                height: 3rem !important;
-                border: 2px solid rgba(255,255,255,0.1) !important;
+                border-radius: 8px !important;
+                border: 1px solid rgba(255,255,255,0.2) !important;
                 background-color: #1a1c24 !important;
-                padding: 0 !important;
+                padding: 0.5rem 1rem !important;
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
-                font-size: 1.5rem !important;
+                font-size: 1.2rem !important;
                 transition: all 0.2s ease-in-out !important;
-            }
-            div[data-testid="stPopover"] > button span[data-testid="stIconMaterial"] {
-                display: none !important;
             }
             div[data-testid="stPopover"] > button:hover {
                 background-color: #2E3192 !important;
                 border-color: #1BFFFF !important;
-                transform: scale(1.05) !important;
+                transform: scale(1.02) !important;
             }
         </style>
         """, unsafe_allow_html=True)
