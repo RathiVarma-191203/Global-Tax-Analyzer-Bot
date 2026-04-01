@@ -60,35 +60,38 @@ st.markdown("""
     /* Position the popover containing the paperclip specifically */
     div[data-testid="stPopover"] {
         position: fixed !important;
-        bottom: 70px !important; /* Vertically centered in the chat input */
+        bottom: 74px !important; /* Perfectly centered vertically in the taller bar */
         left: 50% !important;
-        transform: translateX(-275px) !important; /* Stay inside the box even with sidebar */
+        transform: translateX(-240px) !important; /* Move right to stay away from sidebar */
         z-index: 1000001 !important;
         width: auto !important;
     }
 
     /* Make the chat input text area start further right and end earlier */
     [data-testid="stChatInputTextArea"] {
-        padding-left: 3.8rem !important;
-        padding-right: 4.5rem !important;
-        border-radius: 30px !important; /* Elegant Grok rounded look */
+        min-height: 75px !important; /* Increased size like Grok */
+        font-size: 1.1rem !important;
+        padding-left: 4.5rem !important; /* More space for paperclip */
+        padding-right: 5rem !important; /* More space for mic & send buttons */
+        border-radius: 35px !important; /* Premium Grok rounded look */
+        line-height: 1.6 !important;
         background-color: #1a1c24 !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
     }
 
     /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
     .grok-voice-btn {
         position: fixed !important;
-        bottom: 70px !important; 
+        bottom: 74px !important; 
         left: 50% !important;
-        transform: translateX(235px) !important; /* Stay right, before the send button */
+        transform: translateX(250px) !important; /* Shift to stay right, before send button */
         z-index: 1000001 !important;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         padding: 0.3rem;
         color: #a0aec0;
-        border-radius: 6px;
-        width: 2.5rem;
-        height: 2.5rem;
+        border-radius: 8px;
+        width: 2.8rem;
+        height: 2.8rem;
         display: flex;
         align-items: center;
         justify-content: center;
