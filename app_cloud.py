@@ -48,16 +48,18 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         margin-bottom: 2rem;
     }
-    /* Push content above the pinned chat bar */
-    .main .block-container { padding-bottom: 5rem !important; }
-
     /* ── Paperclip & Mic: Clean up for JS positioning ── */
-    [data-testid="stChatInputContainer"] {
+    /* Hide initially to prevent flashing at the top */
+    div[data-testid="stPopover"], .grok-voice-btn {
+        visibility: hidden !important; 
+        position: static !important;
+    }
+    
+    [data-testid="stChatInput"] > div {
         display: flex !important;
         align-items: center !important;
         gap: 8px !important;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
+        padding: 0 10px !important;
         min-height: 85px !important; /* Premium Grok-size */
         border-radius: 40px !important;
         background-color: #1a1c24 !important;
@@ -85,18 +87,27 @@ st.markdown("""
     }
 
     [data-testid="stChatInputTextArea"] {
-        order: 1; /* Stay centered */
+        order: 1 !important; /* Stay centered */
         background: transparent !important;
         border: none !important;
         flex-grow: 1 !important;
         font-size: 1.15rem !important;
         line-height: 1.5 !important;
+        padding: 10px 4rem !important; /* Add space for icons */
     }
 
-    /* Target the submit button to move to far right */
-    button[data-testid="stChatInputSubmit"] {
-        order: 3;
+    /* Move submit button to the far right */
+    [data-testid="stChatInput"] button {
+        order: 3 !important;
     }
+    
+    /* Reveal icons once inside the bar */
+    [data-testid="stChatInput"] div[data-testid="stPopover"],
+    [data-testid="stChatInput"] .grok-voice-btn {
+        visibility: visible !important;
+        margin-top: -5px;
+    }
+
     /* The popover trigger button — minimal icon style */
     div[data-testid="stPopover"] > button {
         background: transparent !important;
@@ -323,35 +334,32 @@ components.html("""
 <script>
 function attachIcons() {
     const parentDoc = window.parent.document;
+    
+    // Find icons and the chat input container's inner flex div
     const paperclip = parentDoc.querySelector('div[data-testid="stPopover"]');
     const mic = parentDoc.querySelector('.grok-voice-btn');
-    const container = parentDoc.querySelector('[data-testid="stChatInputContainer"]');
+    const containerInner = parentDoc.querySelector('div[data-testid="stChatInput"] > div');
 
-    if (container && paperclip && mic && !container.contains(paperclip)) {
-        // Move Paperclip to very start of the bar
-        container.prepend(paperclip);
+    if (containerInner && paperclip && mic && !containerInner.contains(paperclip)) {
+        // Move Paperclip to the very start of the bar
+        containerInner.prepend(paperclip);
         
         // Find send button and insert Mic right before it
-        const sendBtn = container.querySelector('button[data-testid="stChatInputSubmit"]');
+        const sendBtn = containerInner.querySelector('button');
         if (sendBtn) {
-            container.insertBefore(mic, sendBtn);
+            containerInner.insertBefore(mic, sendBtn);
         } else {
-            container.appendChild(mic);
+            containerInner.appendChild(mic);
         }
         
-        // Re-styling for flex layout
-        paperclip.style.position = 'static';
-        paperclip.style.margin = '0 5px';
-        mic.style.position = 'static';
-        mic.style.margin = '0 5px';
+        // Final styling for static flex items
+        paperclip.style.visibility = 'visible';
+        mic.style.visibility = 'visible';
+        mic.style.order = '2'; // Ensure it follows the text area
     }
 }
 
-// Streamlit rerenders frequently. Use an observer to re-attach whenever DOM changes.
-const observer = new MutationObserver(attachIcons);
-observer.observe(window.parent.document.body, { childList: true, subtree: true });
-
-// Also try once immediately
-setInterval(attachIcons, 1000);
+// Streamlit rerenders frequently. Run on a loop to ensure icons stay in the box.
+setInterval(attachIcons, 500);
 </script>
 """, height=0)
