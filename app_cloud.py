@@ -6,6 +6,7 @@ Uses Supabase pgvector for cloud persistence.
 import streamlit as st
 import time
 import os
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 # Import our custom modules (ensure they are in the path)
@@ -50,57 +51,51 @@ st.markdown("""
     /* Push content above the pinned chat bar */
     .main .block-container { padding-bottom: 5rem !important; }
 
-    /* ── Paperclip: float it INSIDE the chat input bar ── */
-    /* Streamlit chat input container sits at fixed bottom */
-    [data-testid="stChatInput"] {
-        position: relative !important;
-        background: transparent !important;
-    }
-    
-    /* Position the popover containing the paperclip specifically */
-    div[data-testid="stPopover"] {
-        position: fixed !important;
-        bottom: 78px !important; /* Vertically centered for the 85px bar */
-        left: calc(50% + 140px) !important; /* Offset center for the box itself */
-        transform: translateX(-340px) !important; /* Align with left edge of the rounded box */
-        z-index: 1000001 !important;
-        width: auto !important;
-    }
-
-    /* Make the chat input text area start further right and end earlier */
-    [data-testid="stChatInputTextArea"] {
-        min-height: 85px !important; /* Upgraded Grok-size */
-        font-size: 1.15rem !important;
-        padding-left: 4.8rem !important; /* Extra room for Paperclip at far left */
-        padding-right: 5.5rem !important; /* Room for Grouped Mic + Send on right */
-        border-radius: 40px !important; /* Premium organic shape */
-        line-height: 1.5 !important;
+    /* ── Paperclip & Mic: Clean up for JS positioning ── */
+    [data-testid="stChatInputContainer"] {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        min-height: 85px !important; /* Premium Grok-size */
+        border-radius: 40px !important;
         background-color: #1a1c24 !important;
         border: 1px solid rgba(255,255,255,0.2) !important;
     }
-
-    /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
+    
+    /* Paperclip Popover inside the flex bar */
+    div[data-testid="stPopover"] {
+        position: static !important;
+        width: auto !important;
+    }
+    
+    /* Mic icon inside the flex bar */
     .grok-voice-btn {
-        position: fixed !important;
-        bottom: 78px !important; 
-        left: calc(50% + 140px) !important;
-        transform: translateX(235px) !important; /* Grouped cleanly before the Arrow button */
-        z-index: 1000001 !important;
+        position: static !important;
         font-size: 1.5rem;
-        padding: 0.3rem;
         color: #a0aec0;
-        border-radius: 8px;
-        width: 3rem;
-        height: 3rem;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        transition: color 0.15s, background 0.15s;
+        width: 3rem;
+        height: 3rem;
+        order: 2; /* Put after textarea */
     }
-    .grok-voice-btn:hover {
-        color: #4facfe;
-        background: rgba(79,172,254,0.1);
+
+    [data-testid="stChatInputTextArea"] {
+        order: 1; /* Stay centered */
+        background: transparent !important;
+        border: none !important;
+        flex-grow: 1 !important;
+        font-size: 1.15rem !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Target the submit button to move to far right */
+    button[data-testid="stChatInputSubmit"] {
+        order: 3;
     }
     /* The popover trigger button — minimal icon style */
     div[data-testid="stPopover"] > button {
@@ -322,3 +317,41 @@ else:
         - **Vector DB**: Supabase pgvector (Permanent)
         - **Datasets**: HF Financial Phrasebank
         """)
+
+# --- Precision Grok-Style DOM Injection Hack ---
+components.html("""
+<script>
+function attachIcons() {
+    const parentDoc = window.parent.document;
+    const paperclip = parentDoc.querySelector('div[data-testid="stPopover"]');
+    const mic = parentDoc.querySelector('.grok-voice-btn');
+    const container = parentDoc.querySelector('[data-testid="stChatInputContainer"]');
+
+    if (container && paperclip && mic && !container.contains(paperclip)) {
+        // Move Paperclip to very start of the bar
+        container.prepend(paperclip);
+        
+        // Find send button and insert Mic right before it
+        const sendBtn = container.querySelector('button[data-testid="stChatInputSubmit"]');
+        if (sendBtn) {
+            container.insertBefore(mic, sendBtn);
+        } else {
+            container.appendChild(mic);
+        }
+        
+        // Re-styling for flex layout
+        paperclip.style.position = 'static';
+        paperclip.style.margin = '0 5px';
+        mic.style.position = 'static';
+        mic.style.margin = '0 5px';
+    }
+}
+
+// Streamlit rerenders frequently. Use an observer to re-attach whenever DOM changes.
+const observer = new MutationObserver(attachIcons);
+observer.observe(window.parent.document.body, { childList: true, subtree: true });
+
+// Also try once immediately
+setInterval(attachIcons, 1000);
+</script>
+""", height=0)
