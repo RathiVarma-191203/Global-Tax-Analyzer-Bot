@@ -60,38 +60,38 @@ st.markdown("""
     /* Position the popover containing the paperclip specifically */
     div[data-testid="stPopover"] {
         position: fixed !important;
-        bottom: 74px !important; /* Perfectly centered vertically in the taller bar */
-        left: 50% !important;
-        transform: translateX(-240px) !important; /* Move right to stay away from sidebar */
+        bottom: 78px !important; /* Vertically centered for the 85px bar */
+        left: calc(50% + 140px) !important; /* Offset center for the box itself */
+        transform: translateX(-340px) !important; /* Align with left edge of the rounded box */
         z-index: 1000001 !important;
         width: auto !important;
     }
 
     /* Make the chat input text area start further right and end earlier */
     [data-testid="stChatInputTextArea"] {
-        min-height: 75px !important; /* Increased size like Grok */
-        font-size: 1.1rem !important;
-        padding-left: 4.5rem !important; /* More space for paperclip */
-        padding-right: 5rem !important; /* More space for mic & send buttons */
-        border-radius: 35px !important; /* Premium Grok rounded look */
-        line-height: 1.6 !important;
+        min-height: 85px !important; /* Upgraded Grok-size */
+        font-size: 1.15rem !important;
+        padding-left: 4.8rem !important; /* Extra room for Paperclip at far left */
+        padding-right: 5.5rem !important; /* Room for Grouped Mic + Send on right */
+        border-radius: 40px !important; /* Premium organic shape */
+        line-height: 1.5 !important;
         background-color: #1a1c24 !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
     }
 
     /* ── Voice Assistant: float it on the RIGHT side inside the chat input bar ── */
     .grok-voice-btn {
         position: fixed !important;
-        bottom: 74px !important; 
-        left: 50% !important;
-        transform: translateX(250px) !important; /* Shift to stay right, before send button */
+        bottom: 78px !important; 
+        left: calc(50% + 140px) !important;
+        transform: translateX(235px) !important; /* Grouped cleanly before the Arrow button */
         z-index: 1000001 !important;
-        font-size: 1.4rem;
+        font-size: 1.5rem;
         padding: 0.3rem;
         color: #a0aec0;
         border-radius: 8px;
-        width: 2.8rem;
-        height: 2.8rem;
+        width: 3rem;
+        height: 3rem;
         display: flex;
         align-items: center;
         justify-content: center;
