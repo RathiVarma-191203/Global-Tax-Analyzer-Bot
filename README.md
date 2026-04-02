@@ -1,79 +1,65 @@
-## ☁️ Cloud Deployment
+# ⚖️ Global Tax Analyzer AI
 
-For deploying to a public URL (e.g. Streamlit Community Cloud), use the **`app_cloud.py`** entry point. This version is optimized for single-service cloud hosting and uses **Supabase pgvector** for permanent context storage.
-
-### 1. Unified App Architecture
-- Entry point: `app_cloud.py`
-- Stores embeddings in Supabase (pgvector), not local files.
-- Includes integrated auth and RAG logic.
-
-### 2. Environment Variables (Required in Cloud)
-Set these in your deployment dashboard:
-- `HUGGINGFACE_API_TOKEN`
-- `SUPABASE_URL`
-- `SUPABASE_KEY`
-
-### 3. Database Migration (pgvector)
-Before deploying, execute the updated **`supabase_schema.sql`** in your Supabase SQL Editor to enable the `vector` extension and the `document_chunks` table.
-
-## 🛠 Setup & Launch
-
-... [previous setup manual steps]
+A production-ready, RAG-powered tax assistant designed to provide accurate, multi-country tax insights. Built with a unified Streamlit architecture, it leverages Supabase pgvector for persistent cloud storage and Hugging Face inference for high-quality LLM responses.
 
 ## 🚀 Key Features
 
-- **Intuitive UI**: Clean, ChatGPT-inspired interface with history, new chat, and file uploads.
-- **Advanced RAG Pipeline**: 
-  - Retrieves top-k relevant chunks from user-uploaded context.
-  - Augments responses using Hugging Face dataset knowledge (Financial Phrasebank).
-  - Uses `mistralai/Mistral-7B-Instruct-v0.2` via Hugging Face Inference API.
-- **Secure File Processing**: Supports PDF, Excel, and DOCX indexing.
-- **User Isolation**: Separate FAISS indexes and Supabase storage per user.
-- **History & Persistence**: All conversations and documents are stored securely in Supabase.
+- **Unified Cloud Architecture**: Designed to be easily deployed on Streamlit Community Cloud without needing a separate FastAPI backend.
+- **Intelligent RAG Pipeline**:
+  - Contextualizes responses using user-uploaded documents (PDF, Excel, DOCX).
+  - Uses `mistralai/Mistral-7B-Instruct-v0.2` via the Hugging Face Serverless Inference API.
+  - Leverages the Hugging Face Financial Phrasebank dataset for augmented context.
+- **Robust Cloud Storage**: 
+  - User Authentication, Chats, Messages, and Document storage handled cleanly by **Supabase**.
+  - Document embeddings are securely stored in **Supabase pgvector**, ensuring permanent, cross-session contextual memory.
+- **Responsive & Modern UI**: ChatGPT-inspired interface featuring robust chat history, dynamic file uploads, and a clean floating UI design.
 
-## 📁 System Architecture
+## 🛠 Tech Stack
 
-- **Frontend**: Streamlit
-- **Backend API**: FastAPI
-- **PostgreSQL/Auth/Storage**: Supabase
-- **Vector Database**: FAISS (local)
+- **Frontend & App Logic**: Streamlit (via `app_cloud.py`)
+- **Remote LLM Inference**: Hugging Face Hub (Mistral 7B)
+- **Vector Database & Auth**: Supabase (pgvector & Storage)
 - **Embeddings**: `sentence-transformers/all-MiniLM-L6-v2`
 
-## 🛠 Setup & Launch
+## ☁️ Deployment to Streamlit Community Cloud
 
-### 1. Configure Supabase
-Ensure you have run the `supabase_schema.sql` within your Supabase SQL Editor. This sets up required tables (`profiles`, `chats`, `messages`, `documents`) and RLS policies.
+The local "Deploy" button in Streamlit can sometimes fail if it doesn't recognize your local Git tracking or Streamlit account authorization. To deploy this app seamlessly to the cloud:
+
+1. Ensure your code is pushed to your GitHub Repository.
+2. Visit [share.streamlit.io](https://share.streamlit.io) and log in with your GitHub account.
+3. Click **"New app"** and select your GitHub repository.
+4. Set the **Main file path** to: `app_cloud.py`
+5. **CRITICAL**: Go to **Advanced Settings** -> **Secrets** and add your environment variables:
+   ```toml
+   HUGGINGFACE_API_TOKEN = "your_token_here"
+   SUPABASE_URL = "your_supabase_url_here"
+   SUPABASE_KEY = "your_supabase_key_here"
+   ```
+6. Click **Deploy!**
+
+## 💻 Local Setup & Launch
+
+### 1. Database Setup
+Ensure you execute `supabase_schema.sql` in your Supabase SQL Editor. This initializes the `vector` extension and creates all required tables (`profiles`, `chats`, `messages`, `document_chunks`) alongside their security rules policies.
 
 ### 2. Environment Variables
-Rename `.env.example` to `.env` and fill in your actual credentials:
-- `HUGGINGFACE_API_TOKEN`
-- `SUPABASE_URL`
-- `SUPABASE_KEY`
-- `SUPABASE_DB_URL`
+Create a `.env` file in the root directory:
+```env
+HUGGINGFACE_API_TOKEN=your_token
+SUPABASE_URL=your_url
+SUPABASE_KEY=your_key
+```
 
-### 3. Installation
+### 3. Installation & Local Run
+Install the dependencies, and then start the Streamlit application:
 ```powershell
 pip install -r requirements.txt
+python -m streamlit run app_cloud.py
 ```
 
-### 4. Running the Application
-Use the provided `run.py` utility to launch both the Backend and Frontend concurrently:
-```powershell
-python run.py
-```
-
-Otherwise, run manually:
-```powershell
-# Terminal 1: Backend
-uvicorn app.backend.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Terminal 2: Frontend
-streamlit run app/frontend/app.py
-```
-
-## 🧪 Example Usage
-1. Sign up/Log in.
-2. Start a **New Chat**.
-3. Upload a tax PDF from India and an Excel sheet from Australia in the sidebar.
-4. Ask: "Compare the corporate tax rates and key filing deadlines for India and Australia."
-5. The chatbot will provide a structured summary including the comparison and key insights.
+## 🧪 Usage Example
+1. Create an account via the Sign Up screen.
+2. Click **➕ New Chat** to create an isolated conversation thread.
+3. Click the **📎** floating action button pinned above the chat box to upload heavy tax manuals (PDF) or financial data sheets (Excel).
+4. Ask a question such as: *"Based on the uploaded Indian Tax code, what are the exact GST rate cuts for electronic goods?"*
+5. The AI scans your cloud pgvector chunks and generates a precise answer!
