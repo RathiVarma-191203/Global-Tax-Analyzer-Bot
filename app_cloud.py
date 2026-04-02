@@ -186,10 +186,13 @@ else:
         st.markdown("""
         <style>
             div[data-testid="stPopover"] {
+                width: fit-content !important;
+                align-self: flex-start !important;
                 margin-bottom: 8px !important; /* Space between button and chatbox */
                 z-index: 1000 !important;
             }
             div[data-testid="stPopover"] > button {
+                width: fit-content !important;
                 border-radius: 8px !important;
                 border: 1px solid rgba(255,255,255,0.2) !important;
                 background-color: #1a1c24 !important;
