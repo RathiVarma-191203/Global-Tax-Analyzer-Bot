@@ -186,9 +186,7 @@ else:
         st.markdown("""
         <style>
             div[data-testid="stPopover"] {
-                position: fixed !important;
-                bottom: 100px !important;
-                left: 3rem !important;
+                margin-bottom: 8px !important; /* Space between button and chatbox */
                 z-index: 1000 !important;
             }
             div[data-testid="stPopover"] > button {
@@ -267,3 +265,24 @@ else:
         - **Vector DB**: Supabase pgvector (Permanent)
         - **Datasets**: HF Financial Phrasebank
         """)
+
+# --- Persistent UI Injection Hack ---
+components.html("""
+<script>
+function pinPopover() {
+    try {
+        const parent = window.parent.document;
+        const popover = parent.querySelector('div[data-testid="stPopover"]');
+        const chatInput = parent.querySelector('div[data-testid="stChatInput"]');
+        
+        if (popover && chatInput && !chatInput.contains(popover)) {
+            // Anchor it right before the chat input wrapper
+            chatInput.insertBefore(popover, chatInput.firstChild);
+        }
+    } catch (e) {
+        console.error("UI Hack Error:", e);
+    }
+}
+setInterval(pinPopover, 300);
+</script>
+""", height=0)
